@@ -46,7 +46,7 @@ jobs:
       run: |
         
         git config --global user.name "mrfear2917"
-        git config --global user.email "davidmonge975@github.com"
+        git config --global user.email "davidmonge975@gmail.com"
         
         export ANDROID_NDK_ROOT=${{ steps.setup-ndk.outputs.ndk-path }}
         
