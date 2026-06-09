@@ -33,9 +33,13 @@ jobs:
 
       - name: Aplicar Parches y Compilar Frida (arm64)
         run: |
-          # Configuración obligatoria para que Git aplique los parches
+          # Configuración obligatoria
           git config --global user.email "davidmonge975@github.com"
           git config --global user.name "davidmonge975"
+          
+          # 0. DESTRUIR PARCHES CONFLICTIVOS ANTES DE QUE GIT LOS LEA
+          rm -f Patchs/strongR-frida/frida-core/0002*.patch
+          rm -f Patchs/strongR-frida/frida-core/0003*.patch
           
           # 1. APLICAR LOS PARCHES RESTANTES VÍA GIT (0001, 0004, 0005, 0006, 0007, 0008)
           if [ -d "Patchs/strongR-frida/frida-core" ]; then
@@ -77,18 +81,17 @@ jobs:
               glue_code = f.read()
           
           if 'linjector-%u' in glue_code:
-              # Reemplazo dinámico de la cadena de formato añadiendo el puntero 'self' como argumento
               glue_code = glue_code.replace('\"%s/linjector-%u\", self->temp_path, self->id', '\"%s/%p%u\", self->temp_path, self, self->id')
               glue_code = glue_code.replace('\"%s/linjector-%u\",self->temp_path,self->id', '\"%s/%p%u\", self->temp_path, self, self->id')
               
               with open(glue_path, 'w') as f:
                   f.write(glue_code)
-              print('✅ Inyección manual de Pipe Linjector (0003) completada con éxito.')
+              print('✅ Inyección manual de Pipe Linjector completada con éxito.')
           else:
               print('⚠️ Alerta: No se encontró \"linjector-%u\" en frida-helper-backend-glue.c.')
           "
 
-          # 4. COMPILACIÓN EXCLUSIVA PARA TU PROCESADOR (ARM64)
+          # 4. COMPILACIÓN EXCLUSIVA (ARM64)
           cd frida
           make server-android-arm64
           make inject-android-arm64
@@ -98,7 +101,6 @@ jobs:
         run: |
           mkdir -p releases_output
           
-          # Comprimir y estructurar los archivos de salida
           cd frida/build/frida-android-arm64/bin
           gzip -9 frida-server
           gzip -9 frida-inject
