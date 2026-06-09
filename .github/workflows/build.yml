@@ -3,7 +3,7 @@ name: strongR-frida-16.7.14
 on:
   workflow_dispatch:
 
-# Otorga los permisos necesarios para crear la Release sin dar error
+
 permissions:
   contents: write
 
@@ -44,17 +44,17 @@ jobs:
     - name: build frida for Android
       shell: bash
       run: |
-        # Configuración básica (Sin usar secretos)
-        git config --global user.name "davidmonge975-lgtm"
-        git config --global user.email "david@github.com"
+        
+        git config --global user.name "mrfear2917"
+        git config --global user.email "davidmonge975@github.com"
         
         export ANDROID_NDK_ROOT=${{ steps.setup-ndk.outputs.ndk-path }}
         
-        # Clonar exactamente la versión 16.7.14
+        
         git clone --recurse-submodules --branch 16.7.14 https://github.com/frida/frida
         cd frida
         
-        # Aplicar los parches de ocultamiento (hluda) si existen en tu fork
+        
         if [ -d "../Patchs/strongR-frida" ]; then
           for path in ../Patchs/strongR-frida/*
           do
@@ -66,11 +66,11 @@ jobs:
             cd ../..
           done
         else
-          echo "⚠️ ADVERTENCIA: No se encontró la carpeta 'Patchs'. Se compilará Frida estándar."
+          echo "WARNING: 'Patchs' Wasn't found. Average Frida will be compiled."
         fi
         cd ..
         
-        # Compilar SOLO para arm64 (Optimizado para tu dispositivo)
+        # Only arm64
         ARCHES="android-arm64"
         for ARCH in $ARCHES
         do
