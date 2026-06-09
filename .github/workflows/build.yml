@@ -37,7 +37,7 @@ jobs:
           git config --global user.email "davidmonge975@github.com"
           git config --global user.name "davidmonge975"
           
-          # 1. APLICAR LOS PARCHES COMPATIBLES VÍA GIT (0001, 0003, 0004, 0005, 0006, 0007, 0008)
+          # 1. APLICAR LOS PARCHES RESTANTES VÍA GIT (0001, 0004, 0005, 0006, 0007, 0008)
           if [ -d "Patchs/strongR-frida/frida-core" ]; then
             echo "Aplicando parches automáticos de Git..."
             cd frida/subprojects/frida-core
@@ -56,7 +56,6 @@ jobs:
           with open(file_path, 'r') as f:
               code = f.read()
           
-          # Adaptación elástica para Frida 16.7.14
           if 'private const string DEFAULT_DIRECTORY = \"re.frida.server\";' in code:
               code = code.replace('private const string DEFAULT_DIRECTORY = \"re.frida.server\";', 'private static string DEFAULT_DIRECTORY = null;')
               
@@ -68,10 +67,28 @@ jobs:
                   f.write(code)
               print('✅ Inyección manual de UUID completada con éxito en server.vala')
           else:
-              print('⚠️ Alerta: No se encontró la línea original de DEFAULT_DIRECTORY. Es posible que esta versión ya maneje el directorio de otra forma.')
+              print('⚠️ Alerta: No se encontró la línea original de DEFAULT_DIRECTORY en server.vala.')
           "
 
-          # 3. COMPILACIÓN EXCLUSIVA PARA TU PROCESADOR (ARM64)
+          # 3. INYECCIÓN MANUAL DEL PARCHE 0003 (Bypass de pipe linjector)
+          python3 -c "
+          glue_path = 'frida/subprojects/frida-core/src/linux/frida-helper-backend-glue.c'
+          with open(glue_path, 'r') as f:
+              glue_code = f.read()
+          
+          if 'linjector-%u' in glue_code:
+              # Reemplazo dinámico de la cadena de formato añadiendo el puntero 'self' como argumento
+              glue_code = glue_code.replace('\"%s/linjector-%u\", self->temp_path, self->id', '\"%s/%p%u\", self->temp_path, self, self->id')
+              glue_code = glue_code.replace('\"%s/linjector-%u\",self->temp_path,self->id', '\"%s/%p%u\", self->temp_path, self, self->id')
+              
+              with open(glue_path, 'w') as f:
+                  f.write(glue_code)
+              print('✅ Inyección manual de Pipe Linjector (0003) completada con éxito.')
+          else:
+              print('⚠️ Alerta: No se encontró \"linjector-%u\" en frida-helper-backend-glue.c.')
+          "
+
+          # 4. COMPILACIÓN EXCLUSIVA PARA TU PROCESADOR (ARM64)
           cd frida
           make server-android-arm64
           make inject-android-arm64
